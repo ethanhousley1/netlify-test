@@ -1,0 +1,10 @@
+{
+  "name": "md-to-site",
+  "private": true,
+  "scripts": {
+    "build": "node build.js"
+  },
+  "dependencies": {
+    "marked": "^15.0.0"
+  }
+}
