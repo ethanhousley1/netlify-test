@@ -54,6 +54,14 @@ const headings = [];
 const slugCounts = {};
 
 const renderer = new marked.Renderer();
+renderer.code = function ({ text, lang }) {
+  if (lang === 'mermaid') {
+    return `<pre class="mermaid">${text}</pre>`;
+  }
+  const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return `<pre><code${lang ? ` class="language-${lang}"` : ''}>${escaped}</code></pre>`;
+};
+
 renderer.heading = function ({ text, depth }) {
   const raw = text.replace(/<[^>]+>/g, '').trim();
   let slug = raw.toLowerCase().replace(/[^\w]+/g, '-').replace(/(^-|-$)/g, '');
@@ -138,7 +146,12 @@ const html = `<!DOCTYPE html>
     .toc li { padding: 0.15em 0; }
     .toc a { text-decoration: none; }
     .toc a:hover { text-decoration: underline; }
+    .mermaid { background: none; text-align: center; }
   </style>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'default' });
+  </script>
 </head>
 <body>
 ${buildToc(headings)}
