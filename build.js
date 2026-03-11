@@ -6,10 +6,79 @@ const mdFile = path.join(__dirname, "example.md");
 const outDir = path.join(__dirname, "dist");
 const outFile = path.join(outDir, "index.html");
 
-const markdown = fs.readFileSync(mdFile, "utf-8");
-const htmlBody = marked.parse(markdown);
+function fixMultilineTableCells(md) {
+  const lines = md.split('\n');
+  const result = [];
+  let i = 0;
+  let inCodeBlock = false;
 
-// Extract first heading for the page title
+  while (i < lines.length) {
+    const trimmed = lines[i].trimEnd();
+
+    if (trimmed.startsWith('```')) {
+      inCodeBlock = !inCodeBlock;
+      result.push(lines[i]);
+      i++;
+      continue;
+    }
+
+    if (!inCodeBlock && trimmed.startsWith('|') && !trimmed.endsWith('|')) {
+      let accumulated = trimmed;
+      i++;
+      while (i < lines.length) {
+        const nextTrimmed = lines[i].trimEnd();
+        if (nextTrimmed === '') {
+          i++;
+          continue;
+        }
+        accumulated += ' ' + nextTrimmed;
+        i++;
+        if (nextTrimmed.endsWith('|')) {
+          break;
+        }
+      }
+      result.push(accumulated);
+    } else {
+      result.push(lines[i]);
+      i++;
+    }
+  }
+
+  return result.join('\n');
+}
+
+const rawMarkdown = fs.readFileSync(mdFile, "utf-8");
+const markdown = fixMultilineTableCells(rawMarkdown);
+
+const headings = [];
+const slugCounts = {};
+
+const renderer = new marked.Renderer();
+renderer.heading = function ({ text, depth }) {
+  const raw = text.replace(/<[^>]+>/g, '').trim();
+  let slug = raw.toLowerCase().replace(/[^\w]+/g, '-').replace(/(^-|-$)/g, '');
+  if (slugCounts[slug] != null) {
+    slugCounts[slug]++;
+    slug += '-' + slugCounts[slug];
+  } else {
+    slugCounts[slug] = 0;
+  }
+  headings.push({ text: raw, slug, depth });
+  return `<h${depth} id="${slug}">${text}</h${depth}>`;
+};
+
+const htmlBody = marked.parse(markdown, { renderer });
+
+function buildToc(headings) {
+  let toc = '<nav class="toc"><h2>Table of Contents</h2><ul>';
+  for (const h of headings) {
+    const indent = (h.depth - 1) * 1.2;
+    toc += `<li style="margin-left:${indent}em"><a href="#${h.slug}">${h.text}</a></li>`;
+  }
+  toc += '</ul></nav><hr>';
+  return toc;
+}
+
 const titleMatch = markdown.match(/^#\s+(.+)/m);
 const title = titleMatch ? titleMatch[1] : "Markdown Site";
 
@@ -63,9 +132,16 @@ const html = `<!DOCTYPE html>
     th { background: #f4f4f4; }
     a { color: #0366d6; }
     ul, ol { padding-left: 1.5em; }
+    .toc { background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 6px; padding: 1em 1.5em; margin-bottom: 2em; }
+    .toc h2 { margin-top: 0; font-size: 1.2em; }
+    .toc ul { list-style: none; padding-left: 0; margin-bottom: 0; }
+    .toc li { padding: 0.15em 0; }
+    .toc a { text-decoration: none; }
+    .toc a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
+${buildToc(headings)}
 ${htmlBody}
 </body>
 </html>`;
