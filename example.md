@@ -1243,20 +1243,8 @@ Case insensitive |
 
 | **Param** | **Type** |  |
 | --- | --- | --- |
-| hook_type | One of:
-- `recording_added`
-- `recording_updated`
-- `recording_deleted`
-- `highlight_added`
-- `highlight_updated`
-- `highlight_deleted`
-- `story_added`
-- `story_updated`
-- `story_deleted`
-- `upload_status` | Only return hooks with the matching `hook_type` |
-| state | One of:
-- `enabled`
-- `disabled` | Only return hooks that are either enabled or disabled. |
+| hook_type | One of:<br>- `recording_added`<br>- `recording_updated`<br>- `recording_deleted`<br>- `highlight_added`<br>- `highlight_updated`<br>- `highlight_deleted`<br>- `story_added`<br>- `story_updated`<br>- `story_deleted`<br>- `upload_status` | Only return hooks with the matching `hook_type` |
+| state | One of:<br>- `enabled`<br>- `disabled` | Only return hooks that are either enabled or disabled. |
 
 ## Common Responses
 
