@@ -162,14 +162,17 @@ ${htmlBody}
 fs.mkdirSync(outDir, { recursive: true });
 fs.writeFileSync(outFile, html);
 
-const imagesDir = path.join(__dirname, "images");
-const outImagesDir = path.join(outDir, "images");
-if (fs.existsSync(imagesDir)) {
-  fs.mkdirSync(outImagesDir, { recursive: true });
-  for (const file of fs.readdirSync(imagesDir)) {
-    fs.copyFileSync(path.join(imagesDir, file), path.join(outImagesDir, file));
+for (const folder of ["images", "videos"]) {
+  const srcDir = path.join(__dirname, folder);
+  const destDir = path.join(outDir, folder);
+  if (fs.existsSync(srcDir)) {
+    fs.mkdirSync(destDir, { recursive: true });
+    const files = fs.readdirSync(srcDir);
+    for (const file of files) {
+      fs.copyFileSync(path.join(srcDir, file), path.join(destDir, file));
+    }
+    console.log(`Copied ${files.length} file(s) to dist/${folder}/`);
   }
-  console.log(`Copied ${fs.readdirSync(imagesDir).length} image(s) to dist/images/`);
 }
 
 console.log("Built dist/index.html from example.md");
